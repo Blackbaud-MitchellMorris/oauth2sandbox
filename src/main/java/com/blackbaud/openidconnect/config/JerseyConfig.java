@@ -14,6 +14,7 @@ public class JerseyConfig extends CommonJerseyConfig {
     public void initialize() {
         super.initialize();
         packages("com.blackbaud.openidconnect.config");
+        packages("com.blackbaud.openidconnect.resources");
     }
 
 }

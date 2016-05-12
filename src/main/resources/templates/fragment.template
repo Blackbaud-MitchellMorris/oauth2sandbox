@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        function postForm() {
+            var xhttp;
+            if (window.XMLHttpRequest) {
+                xhttp = new XMLHttpRequest();
+            } else {
+                // code for IE6, IE5
+                xhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+
+            xhttp.onreadystatechange = function() {
+                if (xhttp.readyState == 4) {
+                    document.body.innerHTML = xhttp.responseText
+                }
+            }
+
+            xhttp.open("POST",
+                    /*[[${postUri}]]*/ "http://www.google.com/",
+                    true);
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xhttp.send(window.location.hash.substr(1));
+        }
+
+        /*]]>*/
+    </script>
+</head>
+<body onload="postForm()"></body>
+</html>

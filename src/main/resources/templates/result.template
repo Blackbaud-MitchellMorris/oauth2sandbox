@@ -1,0 +1,9 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<h1>I Did The Thing</h1>
+<p>Here's what you asked for: <span th:text="${resource}">rsc</span></p>
+<p>Here's what I found:</p>
+<p><code th:text="${thing}">The Thing</code></p>
+</body>
+</html>

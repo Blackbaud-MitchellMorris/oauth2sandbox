@@ -1,0 +1,13 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<h1>Do The Thing</h1>
+Which thing do you want?
+<form th:action="${postUri}" method="post">
+    <select name="resource">
+        <option th:each="thing : ${resources}" th:value="${thing.value}" th:text="${thing.name}">English</option>
+    </select>
+    <input type="submit" value="Gimme!"/>
+</form>
+</body>
+</html>
