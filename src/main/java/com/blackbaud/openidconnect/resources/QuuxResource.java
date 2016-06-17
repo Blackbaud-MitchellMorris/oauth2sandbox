@@ -4,6 +4,7 @@ import com.blackbaud.openidconnect.api.ResourcePaths;
 import com.blackbaud.openidconnect.core.JwtSupport;
 import com.blackbaud.openidconnect.core.OpenidConnectConfigurationFactory;
 import com.blackbaud.openidconnect.core.ResourceBean;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +54,7 @@ public class QuuxResource {
     private static final String LINKEDIN_CLIENT_SECRET = "ISPKe2mI5H4C0JKB";
 
     private static final String BBAUTH_CONFIG_ENDPOINT = "https://bbauth-signin-cdev.blackbaudhosting.com";
-    private static final String BBAUTH_CLIENT_ID = "mgmsandbox";
+    private static final String BBAUTH_CLIENT_ID = "renext.blackbaud.com";
 
     @Inject
     private SpringTemplateEngine templateEngine;
@@ -149,13 +150,16 @@ public class QuuxResource {
                 break;
             case BBAUTH:
                 try {
+                    final URI specialPostUri = UriBuilder.fromUri(uriInfo.getBaseUri()).path(QuuxResource.class).path(ResourcePaths.QUUX_RESULT_PATH).build();
+
                     requestUri = new URIBuilder(bbAuthInitializer.get().getAuthorizationEndpoint())
                             .setParameter("response_type", "id_token")
                             .setParameter("client_id", BBAUTH_CLIENT_ID)
-                            .setParameter("redirect_uri", postUri.toString())
+                            .setParameter("redirect_uri", specialPostUri.toString())
                             .setParameter("scope", "openid email profile")
                             .setParameter("state", jwtSupport.createStateToken(context))
                             .setParameter("nonce", nonce.toString())
+                            .setParameter("response_mode", "form_post")
                             .build();
                 } catch (URISyntaxException | ConcurrentException e) {
                     throw new ServerErrorException("unable to build bbauth request", Response.Status.INTERNAL_SERVER_ERROR, e);
@@ -219,7 +223,13 @@ public class QuuxResource {
             throw new ServerErrorException("unable to retrieve config", Response.Status.INTERNAL_SERVER_ERROR, e);
         }
 
-        return renderResultTemplate(context.getResource(), idToken);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            return renderResultTemplate(context.getResource(), objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jwtSupport.decodeIdToken(idToken)));
+        } catch (JsonProcessingException e) {
+            throw new ServerErrorException("unable to write result", Response.Status.INTERNAL_SERVER_ERROR, e);
+        }
     }
 
 

@@ -24,6 +24,7 @@ import java.sql.Date;
 import java.text.ParseException;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
@@ -43,6 +44,53 @@ public class JwtSupport {
     JwtSupport() {
         SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(sharedSecret);
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class IdentityBean {
+        private String id;
+        private String email;
+        private String givenName;
+        private String familyName;
+        private LocalDateTime issuedAt;
+        private LocalDateTime expires;
+    }
+
+    public IdentityBean decodeIdToken(String idToken) {
+        SignedJWT signedJWT;
+        try {
+            signedJWT = SignedJWT.parse(idToken);
+        } catch (ParseException e) {
+            throw new ServerErrorException("unable to parse id_token", Response.Status.INTERNAL_SERVER_ERROR, e);
+        }
+
+        JWTClaimsSet jwtClaimsSet;
+        try {
+            jwtClaimsSet = signedJWT.getJWTClaimsSet();
+        } catch (ParseException e) {
+            throw new ServerErrorException("unable to extract claims set", Response.Status.INTERNAL_SERVER_ERROR, e);
+        }
+
+        try {
+            return IdentityBean.builder()
+                    .id(jwtClaimsSet.getSubject())
+                    .email(jwtClaimsSet.getStringClaim("email"))
+                    .givenName(jwtClaimsSet.getStringClaim("given_name"))
+                    .familyName(jwtClaimsSet.getStringClaim("family_name"))
+                    .issuedAt(claimToLocalDateTime(jwtClaimsSet, "iat"))
+                    .expires(claimToLocalDateTime(jwtClaimsSet, "exp"))
+                    .build();
+        } catch (ParseException e) {
+            throw new ServerErrorException("unable to extract claim from claims set", Response.Status.INTERNAL_SERVER_ERROR, e);
+        }
+    }
+
+    private LocalDateTime claimToLocalDateTime(JWTClaimsSet jwtClaimsSet, String claim) throws ParseException {
+        return LocalDateTime.ofInstant(jwtClaimsSet.getDateClaim(claim).toInstant(),
+                ZoneId.systemDefault());
     }
 
     @Data
@@ -122,9 +170,9 @@ public class JwtSupport {
             throw new ServerErrorException("unable to parse id_token", Response.Status.INTERNAL_SERVER_ERROR, e);
         }
 
-        String x5t = signedJWT.getHeader().getX509CertThumbprint().toString();
+        String kid = signedJWT.getHeader().getKeyID();
 
-        Key key = config.getKeys().get(x5t);
+        Key key = config.getKeys().get(kid);
 
         RSASSAVerifier verifier = new RSASSAVerifier((RSAPublicKey) key);
 

@@ -43,6 +43,9 @@ public class OpenidConnectConfigurationFactory {
         @JsonProperty("authorization_endpoint")
         private URI authorizationEndpoint;
 
+        @JsonProperty("end_session_endpoint")
+        private URI endSessionEndpoint;
+
         @JsonProperty("token_endpoint")
         private URI tokenEndpoint;
 
@@ -51,6 +54,9 @@ public class OpenidConnectConfigurationFactory {
 
         @JsonProperty("jwks_uri")
         private URI jwksUri;
+
+        @JsonProperty("subject_types_supported")
+        private List<String> subjectTypesSupported;
 
         @JsonProperty("scopes_supported")
         private List<String> scopesSupported;
